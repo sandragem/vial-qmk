@@ -22,11 +22,11 @@ enum layer_names {
         _LAYER0,
         _LAYER1,
         _LAYER2
-        
+
     };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
-    
+
     /* LAYER0
       * ┌───┐  ┌───┬───┐  ┌───┬───┬───┐  ┌───┬───┐
       * │Esc│  │Del│OSL│  │F8 │F9 │F3 │  │Num│Cap│
@@ -43,8 +43,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       * └───┘  └───┴───┘  └───┴───┴───┘  └───┴───┘
       *
       */
-    
-    
+
+
 [_LAYER0] = LAYOUT_all_5x8(
         KC_ESC, KC_DEL, OSL(2), KC_F8,  KC_F9,   KC_F3,   KC_NUM,  KC_CAPS,
         KC_A,   KC_Q,   KC_W,   KC_P7,  KC_P8,   KC_P9,   KC_MINS, KC_EQL,
@@ -52,7 +52,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_C,   KC_T,   KC_Y,   KC_P1,  KC_P2,   KC_P3,   KC_PAST, KC_PSLS,
         KC_D,   KC_U,   OSL(1), KC_P0,  KC_PDOT, KC_PSLS, KC_ENT,  KC_BSPC
     ),
-    
+
     /* LAYER1
      * ┌───┐  ┌───┬───┐  ┌───┬───┬───┐  ┌───┬───┐
      * │Esc│  │Del│OSL│  │NO │NO │NO │  │Num│Cap│
@@ -77,7 +77,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_NO,   KC_NO,   KC_NO,   KC_NO, KC_NO, KC_NO, KC_NO,   KC_NO,
         KC_NO,   KC_TRNS, KC_NO,   KC_NO, KC_NO, KC_NO, KC_TRNS, KC_TRNS
     ),
-    
+
     /* LAYER2
      * ┌───┐  ┌───┬───┐  ┌───┬───┬───┐  ┌───┬───┐
      * │Esc│  │Del│OSL│  │NO │NO │NO │  │Num│Cap│
@@ -93,7 +93,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
      * │NO │  │NO │OSL│  │NO │NO │NO │  │Ent│Bck│
      * └───┘  └───┴───┘  └───┴───┴───┘  └───┴───┘
      */
-    
+
 
 [_LAYER2] = LAYOUT_all_5x8(
         KC_TRNS, KC_TRNS, KC_TRNS, KC_NO, KC_NO, KC_NO, KC_TRNS, KC_TRNS,
@@ -105,7 +105,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 };
 
-//function for layer indicator LED
+//Function for layer indicator LED
 void led_init_ports(void) {
     // * Set our LED pins as output
     setPinOutput(D0);
@@ -123,3 +123,38 @@ bool led_update_user(led_t usb_led) {
     writePin(D2, usb_led.caps_lock); // Write High when Caps Lock is on, Low when off
     return false; // Return false to override the default implementation
 }
+
+//OLED Task Call
+
+#ifdef OLED_ENABLE
+
+oled_rotation_t oled_init_user(oled_rotation_t rotation) { return OLED_ROTATION_180; }
+
+bool oled_task_user(void) {
+    // Host Keyboard Layer Status
+    oled_write_P(PSTR("Layer: "), false);
+
+    switch (get_highest_layer(layer_state)) {
+        case _LAYER0:
+            oled_write_P(PSTR("Default\n"), false);
+            break;
+        case _LAYER1:
+            oled_write_P(PSTR("1\n"), false);
+            break;
+        case _LAYER2:
+            oled_write_P(PSTR("2\n"), false);
+            break;
+        default:
+            // Or use the write_ln shortcut over adding '\n' to the end of your string
+            oled_write_ln_P(PSTR("Undefined"), false);
+    }
+
+    // Host Keyboard LED Status
+    led_t led_state = host_keyboard_led_state();
+    oled_write_P(led_state.num_lock ? PSTR("NUM ") : PSTR("    "), false);
+    oled_write_P(led_state.caps_lock ? PSTR("CAP ") : PSTR("    "), false);
+    oled_write_P(led_state.scroll_lock ? PSTR("SCR ") : PSTR("    "), false);
+
+    return false;
+}
+#endif
